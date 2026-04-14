@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashWorks — Greek Vocabulary</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            background: #F7F3E9;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #1a1a2e;
+            color: white;
+            padding: 16px 24px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 26px;
+            font-weight: normal;
+            letter-spacing: 1px;
+        }
+
+        header h1 span.logo-badge {
+            display: inline-block;
+            background: #0067ac;
+            color: white;
+            font-size: 14px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        header .subtitle {
+            font-size: 14px;
+            color: #aaa;
+            font-style: italic;
+            margin-top: 4px;
+        }
+
+        .controls {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        select, button {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 15px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+        }
+
+        button.primary {
+            background: #0067ac;
+            color: white;
+            border: none;
+        }
+
+        button.primary:hover { background: #005490; }
+
+        .checkbox-label {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+        }
+
+        .chip.active {
+            background: #0067ac;
+            color: white;
+            border-color: #0067ac;
+        }
+
+        /* Stats */
+        .stats {
+            max-width: 800px;
+            margin: 0 auto 16px;
+            padding: 0 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .stat-chip {
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .stat-total { background: #ece6d5; color: #555; }
+        .stat-remaining { background: #dce8f0; color: #2a6496; }
+        .stat-correct { background: #d4edda; color: #2d6a3f; }
+        .stat-review { background: #f8d7da; color: #8b3a3e; }
+
+        .progress-bar-container {
+            flex: 1;
+            min-width: 120px;
+            height: 8px;
+            background: #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #0067ac;
+            transition: width 0.3s;
+        }
+
+        /* Card area */
+        .card-area {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 20px;
+            perspective: 1000px;
+        }
+
+        .card-container {
+            position: relative;
+            width: 100%;
+            min-height: 280px;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+
+        .card-container.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            min-height: 280px;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        .card-front {
+            background: white;
+        }
+
+        .card-back {
+            background: #f0f4f8;
+            transform: rotateY(180deg);
+        }
+
+        .card-word {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 42px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .card-type-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            background: #e8f4fd;
+            color: #0067ac;
+            margin-bottom: 8px;
+        }
+
+        .card-meaning {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .card-principal-parts {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 15px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .card-meta {
+            font-size: 13px;
+            color: #999;
+            text-align: center;
+        }
+
+        .card-hint {
+            font-size: 13px;
+            color: #bbb;
+            margin-top: 12px;
+        }
+
+        /* Action buttons */
+        .actions {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-nav {
+            padding: 10px 18px;
+            font-size: 18px;
+            background: #eee;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-nav:hover { background: #ddd; }
+
+        .btn-flip {
+            padding: 10px 20px;
+            font-size: 15px;
+            background: #0067ac;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-flip:hover { background: #005490; }
+
+        .btn-know {
+            padding: 10px 20px;
+            font-size: 15px;
+            background: #2d6a3f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-know:hover { background: #245533; }
+
+        .btn-review {
+            padding: 10px 20px;
+            font-size: 15px;
+            background: #8b3a3e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-review:hover { background: #723032; }
+
+        /* Completion */
+        .completion {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .completion h2 {
+            font-size: 24px;
+            color: #2d6a3f;
+            margin-bottom: 16px;
+        }
+
+        .completion p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Loading / empty states */
+        .message {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 18px;
+        }
+
+        .hidden { display: none; }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 20px; }
+            .card-word { font-size: 32px; }
+            .card-meaning { font-size: 20px; }
+            .card-front, .card-back { min-height: 220px; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><span class="logo-badge">M</span> FlashWorks</h1>
+        <div class="subtitle">New Testament Greek Vocabulary from <em>Basics of Biblical Greek</em></div>
+    </header>
+
+    <div class="controls">
+        <div class="control-row">
+            <select id="chapterSelect" disabled>
+                <option value="">Loading...</option>
+            </select>
+            <button class="primary" id="loadBtn" onclick="loadChapter()" disabled>Load Chapter</button>
+            <label class="checkbox-label"><input type="checkbox" id="shuffleCheck"> Shuffle</label>
+            <label class="checkbox-label"><input type="checkbox" id="reviewOnlyCheck" onchange="applyFilters()"> Review only</label>
+        </div>
+        <div class="filter-chips" id="filterChips">
+            <span class="chip active" data-type="all" onclick="setTypeFilter('all')">All</span>
+            <span class="chip" data-type="N" onclick="setTypeFilter('N')">Nouns</span>
+            <span class="chip" data-type="V" onclick="setTypeFilter('V')">Verbs</span>
+            <span class="chip" data-type="A" onclick="setTypeFilter('A')">Adjectives</span>
+            <span class="chip" data-type="P" onclick="setTypeFilter('P')">Prepositions</span>
+            <span class="chip" data-type="O,U" onclick="setTypeFilter('O,U')">Other</span>
+        </div>
+    </div>
+
+    <div class="stats hidden" id="statsBar">
+        <span class="stat-chip stat-total" id="statTotal">0 cards</span>
+        <span class="stat-chip stat-remaining" id="statRemaining">0 remaining</span>
+        <span class="stat-chip stat-correct" id="statCorrect">0 correct</span>
+        <span class="stat-chip stat-review" id="statReview">0 review</span>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar" style="width:0%"></div>
+        </div>
+    </div>
+
+    <div id="cardSection" class="hidden">
+        <div class="card-area">
+            <div class="card-container" id="cardContainer" onclick="flipCard()">
+                <div class="card-front" id="cardFront"></div>
+                <div class="card-back" id="cardBack"></div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-nav" onclick="prevCard()">&#9664;</button>
+            <button class="btn-know" onclick="markKnow()">I Know It (K)</button>
+            <button class="btn-flip" onclick="flipCard()">Flip (Space)</button>
+            <button class="btn-review" onclick="markReview()">Review Again (R)</button>
+            <button class="btn-nav" onclick="nextCard()">&#9654;</button>
+        </div>
+    </div>
+
+    <div id="completionSection" class="hidden">
+        <div class="completion">
+            <h2>Well done!</h2>
+            <p id="completionMsg"></p>
+            <button class="primary" onclick="startOver()">Start Over</button>
+            <button class="btn-review" style="margin-left:10px" onclick="reviewMissed()">Review Missed</button>
+        </div>
+    </div>
+
+    <div class="message" id="loadingMsg">Loading database...</div>
+
+    <script>
+        let db = null;
+        let allCards = [];       // all cards for current chapter + type filter
+        let cards = [];          // current working set (may exclude known)
+        let currentIndex = 0;
+        let isFlipped = false;
+        let knownSet = new Set();
+        let reviewSet = new Set();
+        let typeFilter = 'all';
+
+        const typeLabels = { N: 'Noun', V: 'Verb', A: 'Adjective', P: 'Preposition', O: 'Other', U: 'Other' };
+
+        // Initialize
+        async function initDB() {
+            const SQL = await initSqlJs({
+                locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+            });
+            const response = await fetch('FlashWorksWeb.sqlite');
+            const buf = await response.arrayBuffer();
+            db = new SQL.Database(new Uint8Array(buf));
+
+            // Populate chapter selector
+            const chapters = queryRows("SELECT DISTINCT dbChapter FROM flash ORDER BY dbChapter");
+            const sel = document.getElementById('chapterSelect');
+            sel.innerHTML = '<option value="">— Select Chapter —</option>';
+            for (const ch of chapters) {
+                const val = ch.dbChapter;
+                const label = val === 99 ? 'All Chapters' : 'Chapter ' + val;
+                sel.innerHTML += `<option value="${val}">${label}</option>`;
+            }
+            sel.disabled = false;
+            document.getElementById('loadBtn').disabled = false;
+            document.getElementById('loadingMsg').textContent = 'Select a chapter to begin.';
+        }
+
+        function queryRows(sql, params) {
+            const stmt = db.prepare(sql);
+            if (params) stmt.bind(params);
+            const rows = [];
+            while (stmt.step()) rows.push(stmt.getAsObject());
+            stmt.free();
+            return rows;
+        }
+
+        function loadChapter() {
+            const ch = document.getElementById('chapterSelect').value;
+            if (!ch) return;
+
+            let sql;
+            if (ch === '99') {
+                sql = "SELECT * FROM flash ORDER BY dbSequence";
+                allCards = queryRows(sql);
+            } else {
+                sql = "SELECT * FROM flash WHERE dbChapter = ? ORDER BY dbSequence";
+                allCards = queryRows(sql, [parseInt(ch)]);
+            }
+
+            knownSet.clear();
+            reviewSet.clear();
+            typeFilter = 'all';
+
+            // Reset filter chips
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            document.querySelector('.chip[data-type="all"]').classList.add('active');
+            document.getElementById('reviewOnlyCheck').checked = false;
+
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let filtered = allCards;
+
+            // Type filter
+            if (typeFilter !== 'all') {
+                const types = typeFilter.split(',');
+                filtered = filtered.filter(c => types.includes(c.dbType));
+            }
+
+            // Review only
+            if (document.getElementById('reviewOnlyCheck').checked) {
+                filtered = filtered.filter(c => reviewSet.has(c.dbSequence));
+            }
+
+            // Shuffle
+            if (document.getElementById('shuffleCheck').checked) {
+                filtered = [...filtered];
+                for (let i = filtered.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+                }
+            }
+
+            cards = filtered;
+            currentIndex = 0;
+            isFlipped = false;
+
+            if (cards.length === 0) {
+                document.getElementById('cardSection').classList.add('hidden');
+                document.getElementById('completionSection').classList.add('hidden');
+                document.getElementById('statsBar').classList.add('hidden');
+                document.getElementById('loadingMsg').textContent = 'No cards match your selection.';
+                document.getElementById('loadingMsg').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('loadingMsg').classList.add('hidden');
+            document.getElementById('completionSection').classList.add('hidden');
+            document.getElementById('cardSection').classList.remove('hidden');
+            document.getElementById('statsBar').classList.remove('hidden');
+            showCard();
+        }
+
+        function setTypeFilter(type) {
+            typeFilter = type;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            document.querySelector(`.chip[data-type="${type}"]`).classList.add('active');
+            applyFilters();
+        }
+
+        function showCard() {
+            if (currentIndex >= cards.length) {
+                showCompletion();
+                return;
+            }
+
+            const card = cards[currentIndex];
+            isFlipped = false;
+            document.getElementById('cardContainer').classList.remove('flipped');
+
+            // Front
+            const frontHTML = `
+                <div class="card-word">${card.dbWord}</div>
+                <span class="card-type-badge">${typeLabels[card.dbType] || card.dbType}</span>
+                <div class="card-hint">Click or press Space to reveal</div>
+            `;
+            document.getElementById('cardFront').innerHTML = frontHTML;
+
+            // Back
+            let backHTML = `<div class="card-meaning">${card.dbMeaning}</div>`;
+            if (card.dbPrincipalParts) {
+                backHTML += `<div class="card-principal-parts">${card.dbPrincipalParts}</div>`;
+            }
+            backHTML += `<div class="card-meta">GK ${card.dbGK} &middot; Frequency: ${card.dbFrequency}x &middot; Chapter ${card.dbChapter}</div>`;
+            document.getElementById('cardBack').innerHTML = backHTML;
+
+            updateStats();
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            document.getElementById('cardContainer').classList.toggle('flipped');
+        }
+
+        function markKnow() {
+            if (currentIndex >= cards.length) return;
+            const seq = cards[currentIndex].dbSequence;
+            knownSet.add(seq);
+            reviewSet.delete(seq);
+            nextCard();
+        }
+
+        function markReview() {
+            if (currentIndex >= cards.length) return;
+            const seq = cards[currentIndex].dbSequence;
+            reviewSet.add(seq);
+            knownSet.delete(seq);
+            nextCard();
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                showCard();
+            } else {
+                showCompletion();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showCard();
+            }
+        }
+
+        function updateStats() {
+            const total = cards.length;
+            const known = cards.filter(c => knownSet.has(c.dbSequence)).length;
+            const review = cards.filter(c => reviewSet.has(c.dbSequence)).length;
+            const remaining = total - known - review;
+            const pct = total > 0 ? Math.round(((known + review) / total) * 100) : 0;
+
+            document.getElementById('statTotal').textContent = total + ' cards';
+            document.getElementById('statRemaining').textContent = remaining + ' remaining';
+            document.getElementById('statCorrect').textContent = known + ' correct';
+            document.getElementById('statReview').textContent = review + ' review';
+            document.getElementById('progressBar').style.width = pct + '%';
+        }
+
+        function showCompletion() {
+            document.getElementById('cardSection').classList.add('hidden');
+            document.getElementById('completionSection').classList.remove('hidden');
+            const known = cards.filter(c => knownSet.has(c.dbSequence)).length;
+            const review = cards.filter(c => reviewSet.has(c.dbSequence)).length;
+            document.getElementById('completionMsg').textContent =
+                `You got ${known} correct and ${review} marked for review out of ${cards.length} cards.`;
+            updateStats();
+        }
+
+        function startOver() {
+            knownSet.clear();
+            reviewSet.clear();
+            document.getElementById('reviewOnlyCheck').checked = false;
+            applyFilters();
+        }
+
+        function reviewMissed() {
+            if (reviewSet.size === 0) return;
+            document.getElementById('reviewOnlyCheck').checked = true;
+            applyFilters();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', e => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            switch (e.key) {
+                case ' ':
+                case 'f':
+                case 'F':
+                    e.preventDefault();
+                    flipCard();
+                    break;
+                case 'ArrowRight':
+                    nextCard();
+                    break;
+                case 'ArrowLeft':
+                    prevCard();
+                    break;
+                case 'k':
+                case 'K':
+                    markKnow();
+                    break;
+                case 'r':
+                case 'R':
+                    markReview();
+                    break;
+            }
+        });
+
+        // Start
+        initDB().catch(err => {
+            document.getElementById('loadingMsg').textContent = 'Error loading database: ' + err.message;
+        });
+    </script>
+</body>
+</html>
