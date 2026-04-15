@@ -421,6 +421,14 @@
             sel.disabled = false;
             document.getElementById('loadBtn').disabled = false;
             document.getElementById('loadingMsg').textContent = 'Select a chapter to begin.';
+
+            // Pre-select chapter from URL (?Chapter=4)
+            const params = new URLSearchParams(window.location.search);
+            const urlChapter = params.get('Chapter') || params.get('chapter');
+            if (urlChapter && chapterNums.includes(parseInt(urlChapter))) {
+                sel.value = urlChapter;
+                loadChapter();
+            }
         }
 
         function loadChapter() {
