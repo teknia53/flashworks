@@ -147,7 +147,7 @@
 
         /* Card area */
         .card-area {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 0 20px;
             perspective: 1000px;
@@ -191,7 +191,7 @@
 
         .card-word {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 42px;
+            font-size: 68px;
             margin-bottom: 12px;
             text-align: center;
         }
@@ -234,7 +234,7 @@
 
         /* Action buttons */
         .actions {
-            max-width: 600px;
+            max-width: 800px;
             margin: 20px auto;
             padding: 0 20px;
             display: flex;
@@ -339,7 +339,7 @@
             </select>
             <button class="primary" id="loadBtn" onclick="loadChapter()" disabled>Load Chapter</button>
             <label class="checkbox-label"><input type="checkbox" id="shuffleCheck"> Shuffle</label>
-            <label class="checkbox-label"><input type="checkbox" id="reviewOnlyCheck" onchange="applyFilters()"> Review only</label>
+            <label class="checkbox-label"><input type="checkbox" id="reviewOnlyCheck" onchange="applyFilters()"> Review missed words</label>
         </div>
         <div class="filter-chips" id="filterChips">
             <span class="chip active" data-type="all" onclick="setTypeFilter('all')">All</span>
@@ -371,9 +371,9 @@
 
         <div class="actions">
             <button class="btn-nav" onclick="prevCard()">&#9664;</button>
-            <button class="btn-know" onclick="markKnow()">I Know It (K)</button>
+            <button class="btn-know" onclick="markKnow()">I know it (K)</button>
             <button class="btn-flip" onclick="flipCard()">Flip (Space)</button>
-            <button class="btn-review" onclick="markReview()">Review Again (R)</button>
+            <button class="btn-review" onclick="markReview()">I did not know it (N)</button>
             <button class="btn-nav" onclick="nextCard()">&#9654;</button>
         </div>
     </div>
@@ -626,8 +626,8 @@
                 case 'K':
                     markKnow();
                     break;
-                case 'r':
-                case 'R':
+                case 'n':
+                case 'N':
                     markReview();
                     break;
             }
