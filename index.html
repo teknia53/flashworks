@@ -20,6 +20,25 @@
             color: white;
             padding: 16px 24px;
             text-align: center;
+            position: relative;
+        }
+
+        header .back-link {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        header .back-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
         }
 
         header h1 {
@@ -328,9 +347,19 @@
 </head>
 <body>
     <header>
+        <a href="https://BillMounce.com/" id="backLink" class="back-link">&larr; Back</a>
         <h1><span class="logo-badge">M</span> FlashWorks</h1>
         <div class="subtitle">New Testament Greek Vocabulary from <em>Basics of Biblical Greek</em></div>
     </header>
+    <script>
+        // Use the actual referring page if the user clicked in from elsewhere
+        (function() {
+            const ref = document.referrer;
+            if (ref && !ref.includes(location.host + location.pathname)) {
+                document.getElementById('backLink').href = ref;
+            }
+        })();
+    </script>
 
     <div class="controls">
         <div class="control-row">
