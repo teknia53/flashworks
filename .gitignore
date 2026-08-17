@@ -1,0 +1,4 @@
+.DS_Store
+.wrangler/
+.claude/settings.local.json
+node_modules/
