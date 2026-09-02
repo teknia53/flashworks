@@ -1,0 +1,7 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1080, "h": 1080, "title": "Square 1080×1080" },
+    { "file": "Landscape.dc.html", "x": 1180, "y": 0, "w": 1600, "h": 900, "title": "Landscape 1600×900" }
+  ],
+  "launch": { "view": "canvas" }
+}
